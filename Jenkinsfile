@@ -12,21 +12,15 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Docker Build & Test') {
             steps {
-                bat 'npm install'
-            }
-        }
+                script {
+                    // Build Docker image with app and dependencies
+                    bat "docker build -t %IMAGE_NAME% ."
 
-        stage('Test') {
-            steps {
-                bat 'npm test'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                bat 'docker build -t %IMAGE_NAME% .'
+                    // Run tests inside the container
+                    bat "docker run --rm %IMAGE_NAME% npm test"
+                }
             }
         }
 
