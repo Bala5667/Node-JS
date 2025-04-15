@@ -1,11 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        git 'Default'  // This should match the name in Jenkins Git config
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out the code...'
-                checkout scm  // 
+                checkout scm
             }
         }
 
@@ -26,10 +30,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build and test completed successfully!'
+            echo '✅ Build and test completed successfully!'
         }
         failure {
-            echo 'Something went wrong during build or test.'
+            echo '❌ Something went wrong during build or test.'
         }
     }
 }
