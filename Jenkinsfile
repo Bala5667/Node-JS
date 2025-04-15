@@ -1,63 +1,53 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-            args '-v $PWD:$PWD'
-        }
-    }
+    agent any
 
     environment {
-        DOCKER_IMAGE = 'bala123/node-app:V1.0' 
+        IMAGE_NAME = 'bala5667/node-js-app'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out the code...'
-                checkout scm
+                git 'https://github.com/Bala5667/Node-JS.git'
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies...'
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                sh 'npm test'
+                bat 'npm test'
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Docker Build') {
             steps {
-                echo 'Logging into Docker Hub...'
+                bat 'docker build -t %IMAGE_NAME% .'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    bat '''
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push %IMAGE_NAME%
+                    '''
                 }
-            }
-        }
-
-        stage('Docker Build & Push') {
-            steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t $DOCKER_IMAGE .'
-
-                echo 'Pushing Docker image to Docker Hub...'
-                sh 'docker push $DOCKER_IMAGE'
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Build, test, and Docker push completed successfully!'
-        }
         failure {
             echo '❌ Something went wrong during the pipeline execution.'
+        }
+        success {
+            echo '✅ Pipeline executed successfully!'
         }
     }
 }
