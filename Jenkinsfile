@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        git 'Default'  // This should match the name in Jenkins Git config
+        git 'Git-Default'  //
     }
 
     stages {
