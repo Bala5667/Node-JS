@@ -1,8 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18'
+            args '-v $PWD:$PWD'
+        }
+    }
 
-    tools {
-        git 'Default'  //
+    environment {
+        DOCKER_IMAGE = 'bala123/node-app:V1.0' 
     }
 
     stages {
@@ -16,24 +21,43 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Installing dependencies...'
-                bat 'npm install'
+                sh 'npm install'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                bat 'npm test'
+                sh 'npm test'
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                echo 'Logging into Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker build -t $DOCKER_IMAGE .'
+
+                echo 'Pushing Docker image to Docker Hub...'
+                sh 'docker push $DOCKER_IMAGE'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build and test completed successfully!'
+            echo '✅ Build, test, and Docker push completed successfully!'
         }
         failure {
-            echo '❌ Something went wrong during build or test.'
+            echo '❌ Something went wrong during the pipeline execution.'
         }
     }
 }
