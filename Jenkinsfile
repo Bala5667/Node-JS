@@ -21,8 +21,8 @@ pipeline {
         stage('Docker Build & Test') {
             steps {
                 script {
-                    bat "docker build -t %IMAGE_NAME% ."
-                    bat "docker run --rm %IMAGE_NAME% npm test"
+                    sh "docker build -t %IMAGE_NAME% ."
+                    sh "docker run --rm %IMAGE_NAME% npm test"
                 }
             }
         }
@@ -30,7 +30,7 @@ pipeline {
         stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    bat '''
+                    sh '''
                         echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
                         docker push %IMAGE_NAME%
                     '''
@@ -40,7 +40,7 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                bat """
+                sh """
                     plink -i \"%PEM_FILE%\" %EC2_HOST% ^
                     "docker pull %IMAGE_NAME% && docker stop nodeapp || true && docker rm nodeapp || true && docker run -d -p 80:3000 --name nodeapp %IMAGE_NAME%"
                 """
