@@ -5,10 +5,6 @@ pipeline {
         githubPush()
     }
 
-    environment {
-        //  DOCKER_HUB_CREDENTIALS = credentials('balaji5667')
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -19,7 +15,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 script {
-                    sh 'docker build -t balaji5667/node-js-app .' 
+                    sh 'docker build -t balaji5667/node-js-app .'
                     sh 'docker run --rm balaji5667/node-js-app npm test'
                 }
             }
@@ -37,8 +33,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'balaji5667', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     script {
-                       sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                       sh 'docker push balaji5667/node-js-app'
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh 'docker push balaji5667/node-js-app'
                     }
                 }
             }
