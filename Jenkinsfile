@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        githubPush()
+        pollSCM('* * * * *') 
     }
 
     stages {
@@ -23,8 +23,8 @@ pipeline {
 
         stage('Docker Image') {
             steps {
-                script{
-                   sh 'docker images'
+                script {
+                    sh 'docker images'
                 }
             }
         }
