@@ -1,63 +1,64 @@
 pipeline {
-    agent any 
-    
-    environment {
-        IMAGE_NAME = 'balaji5667/node-js-app'
-        EC2_HOST = 'ubuntu@44.195.20.79'
-        PEM_FILE = '/home/ubuntu/Amazon Linux.pem'
-    }
+    agent any
 
-    triggers {
-        githubPush()
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-creds')
+        EC2_SSH_KEY = credentials('ec2-ssh-key')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Bala5667/Node-JS.git'
+                git 'https://github.com/Bala5667/Node-JS.git'
             }
         }
-
+        
         stage('Docker Build & Test') {
             steps {
                 script {
-                    sh "docker build -t $IMAGE_NAME ."
-                    sh "docker run --rm $IMAGE_NAME npm test"
+                    sh 'docker build -t balaji5667/node-js-app .'
+                    sh 'docker run --rm balaji5667/node-js-app npm test'
                 }
             }
         }
 
         stage('Docker Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push $IMAGE_NAME
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    script {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh 'docker push balaji5667/node-js-app'
+                    }
                 }
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                sh """
-                    ssh -o StrictHostKeyChecking=no -i "$PEM_FILE" $EC2_HOST '
-                        docker pull $IMAGE_NAME &&
-                        docker stop nodeapp || true &&
-                        docker rm nodeapp || true &&
-                        docker run -d -p 80:3000 --name nodeapp $IMAGE_NAME
-                    '
-                """
+                sshagent(['ec2-ssh-key']) {
+                    script {
+                       
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@44.195.20.79 "docker pull balaji5667/node-js-app && \
+                            docker stop nodeapp || true && \
+                            docker rm nodeapp || true && \
+                            docker run -d -p 80:3000 --name nodeapp balaji5667/node-js-app"
+                        '''
+                    }
+                }
             }
         }
     }
-
+    
     post {
-        failure {
-            echo '❌ Pipeline failed.'
+        always {
+            cleanWs() 
         }
         success {
-            echo '✅ Build, test, push, and deploy completed!'
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
