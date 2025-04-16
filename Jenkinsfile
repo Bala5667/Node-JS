@@ -1,6 +1,6 @@
 pipeline {
-    agent any
-
+    agent any 
+    
     environment {
         IMAGE_NAME = 'balaji5667/node-js-app'
         EC2_HOST = 'ubuntu@44.195.20.79'
