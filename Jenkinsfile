@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'balaji5667/node-js-app'
         EC2_HOST = 'ubuntu@44.195.20.79'
-        PEM_FILE = '/home/ubuntu/Devops/AmazonLinux.pem'
+        PEM_FILE = '/home/ubuntu/Amazon Linux.pem'
     }
 
     triggers {
