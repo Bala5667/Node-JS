@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'bala5667/node-js-app'
+        IMAGE_NAME = 'balaji5667/node-js-app'
     }
 
     stages {
