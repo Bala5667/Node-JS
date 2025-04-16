@@ -30,13 +30,11 @@ pipeline {
         }
 
         stage('Docker Push') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'balaji5667', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh 'docker push balaji5667/node-js-app'
-                    }
-                }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'balaji5667', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+            script {
+                sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io'
+                sh 'docker push balaji5667/node-js-app'
             }
         }
     }
