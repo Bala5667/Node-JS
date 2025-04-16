@@ -1,9 +1,5 @@
-pipeline {
+pipeline { 
     agent any
-
-    triggers {
-        pollSCM('* * * * *') 
-    }
 
     stages {
         stage('Checkout') {
@@ -35,6 +31,26 @@ pipeline {
                     script {
                         sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io'
                         sh 'docker push balaji5667/node-js-app'
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'KEY')]) {
+                    script {
+                        def ec2_ip = '100.25.98.236'
+
+                        sh """
+                        chmod 400 "$KEY"
+                        ssh -o StrictHostKeyChecking=no -i "$KEY" ubuntu@${ec2_ip} '
+                            docker pull balaji5667/node-js-app:latest &&
+                            docker stop nodejs-app || true &&
+                            docker rm nodejs-app || true &&
+                            docker run -d -p 80:3000 --name nodejs-app balaji5667/node-js-app
+                        '
+                        """
                     }
                 }
             }
